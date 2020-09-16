@@ -21,20 +21,21 @@ package edu.nmsu.cs.webserver;
  *
  **/
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.Socket;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.TimeZone;
+import java.text.SimpleDateFormat;
 
 public class WebWorker implements Runnable
 {
 
 	private Socket socket;
-
+	private String requestString;
+	boolean GETvalid = false;
+	boolean GETdefault = false;
+	boolean GETunique = false;
 	/**
 	 * Constructor: must have a valid open socket
 	 **/
@@ -42,7 +43,6 @@ public class WebWorker implements Runnable
 	{
 		socket = s;
 	}
-
 	/**
 	 * Worker thread starting point. Each worker handles just one HTTP request and then returns, which
 	 * destroys the thread. This method assumes that whoever created the worker created it with a
@@ -56,6 +56,7 @@ public class WebWorker implements Runnable
 			InputStream is = socket.getInputStream();
 			OutputStream os = socket.getOutputStream();
 			readHTTPRequest(is);
+			GETvalid = checkRequest();
 			writeHTTPHeader(os, "text/html");
 			writeContent(os);
 			os.flush();
@@ -76,6 +77,7 @@ public class WebWorker implements Runnable
 	{
 		String line;
 		BufferedReader r = new BufferedReader(new InputStreamReader(is));
+		int counter = 0;
 		while (true)
 		{
 			try
@@ -83,9 +85,22 @@ public class WebWorker implements Runnable
 				while (!r.ready())
 					Thread.sleep(1);
 				line = r.readLine();
+				counter++;
 				System.err.println("Request line: (" + line + ")");
-				if (line.length() == 0)
+				if(line.contains("GET")){
+					String[]request = line.split(" ");
+					requestString = request[1];
+				}
+				if (requestString.equals("/")||requestString.equals("/favicon.ico")){
+					GETdefault = true; //load default page
+				}
+				else
+					GETunique = true; //actually requested a file
+
+
+				if (line.length() == 0) {
 					break;
+				}
 			}
 			catch (Exception e)
 			{
@@ -93,8 +108,9 @@ public class WebWorker implements Runnable
 				break;
 			}
 		}
-		return;
 	}
+
+
 
 	/**
 	 * Write the HTTP header lines to the client network connection.
@@ -109,7 +125,16 @@ public class WebWorker implements Runnable
 		Date d = new Date();
 		DateFormat df = DateFormat.getDateTimeInstance();
 		df.setTimeZone(TimeZone.getTimeZone("GMT"));
-		os.write("HTTP/1.1 200 OK\n".getBytes());
+		/*check if GET request is valid. if no request, header and default message is fine.
+		* if request length is greater than 1 and file path is not valid, send message 404 not found*/
+		if (GETvalid || GETdefault){
+			os.write("HTTP/1.1 200 OK\n".getBytes());
+		}
+		else {
+			os.write("404 NOT FOUND\n".getBytes());
+		}
+		System.err.println("GETvalid: "+GETvalid);
+		System.err.println("GETdefault: "+GETdefault);
 		os.write("Date: ".getBytes());
 		os.write((df.format(d)).getBytes());
 		os.write("\n".getBytes());
@@ -120,7 +145,6 @@ public class WebWorker implements Runnable
 		os.write("Content-Type: ".getBytes());
 		os.write(contentType.getBytes());
 		os.write("\n\n".getBytes()); // HTTP header ends with 2 newlines
-		return;
 	}
 
 	/**
@@ -132,9 +156,58 @@ public class WebWorker implements Runnable
 	 **/
 	private void writeContent(OutputStream os) throws Exception
 	{
-		os.write("<html><head></head><body>\n".getBytes());
-		os.write("<h3>My web server works!</h3>\n".getBytes());
-		os.write("</body></html>\n".getBytes());
-	}
+			File file = new File(requestString);
+			/*
+			if(GETvalid){
+			try {
+				System.err.println(requestString);
+				//FIXME : replace static path with file path
+				BufferedReader reader = new BufferedReader(new FileReader("C:\\Users\\jesus\\IdeaProjects\\Programs\\res\\acc"));
+				String line = reader.readLine();
+				while(line != null){
 
+					if(line.contains("<cs371date")){
+						SimpleDateFormat format = new SimpleDateFormat("MM-dd-yyyy");
+						String dateString = format.format(new Date());
+						line.replace("<cs371date", dateString);
+					}
+					if(line.contains("<cs371server")){
+						line.replace("<cs371server", "JESUSBARBA");
+					}
+
+					os.write(line.getBytes());
+					line = reader.readLine();
+				}
+				reader.close();
+			}
+
+			catch(Exception e){
+				System.err.println("ERROR STARTS HERE");
+				e.printStackTrace();
+			}
+
+
+		}
+
+
+		if (GETvalid){
+			String filePathtest = "<html><h1>localfile: "+ file.getAbsolutePath() + "</h1><html>";
+			os.write(filePathtest.getBytes());
+		}
+		else {
+			*/
+			os.write("<html><head></head><body>\n".getBytes());
+			os.write("<h3>Default header for Java HTTP server</h3>\n".getBytes());
+
+			os.write(new String("<h1>localfile: "+ file.getAbsolutePath() + "</h1>").getBytes());
+			os.write("</body></html>\n".getBytes());
+			System.out.println("requestString: "+requestString);
+		//}
+
+
+	}
+	private boolean checkRequest(){
+		File file = new File(requestString);
+		return (file.exists()&&file.isFile());
+	}
 } // end class

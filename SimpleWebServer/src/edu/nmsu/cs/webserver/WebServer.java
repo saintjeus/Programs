@@ -21,7 +21,7 @@ public class WebServer
 {
 	private ServerSocket	socket;
 
-	private boolean				running;
+	private boolean	running;
 
 	/**
 	 * Constructor
@@ -84,7 +84,7 @@ public class WebServer
 	 **/
 	public static void main(String args[])
 	{
-		int port = 8080;
+		int port = 8085;
 		if (args.length > 1)
 		{
 			System.err.println("Usage: java Webserver <portNumber>");
