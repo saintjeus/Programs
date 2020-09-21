@@ -27,14 +27,15 @@ import java.text.DateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 import java.text.SimpleDateFormat;
+import java.nio.file.*;
 
 public class WebWorker implements Runnable
 {
 
 	private Socket socket;
 	private String requestString ="";
-	boolean GETvalid = false;
-	boolean GETdefault = false;
+	boolean GETvalid;
+	boolean GETdefault;
 	File file;
 	/**
 	 * Constructor: must have a valid open socket
@@ -50,13 +51,14 @@ public class WebWorker implements Runnable
 	 **/
 	public void run()
 	{
+
 		System.err.println("Handling connection...");
 		try
 		{
 			InputStream is = socket.getInputStream();
 			OutputStream os = socket.getOutputStream();
 			readHTTPRequest(is);
-			if (!GETdefault)
+			if(GETdefault == false)
 				GETvalid = checkRequest();
 			writeHTTPHeader(os, "text/html");
 			writeContent(os);
@@ -68,6 +70,7 @@ public class WebWorker implements Runnable
 			System.err.println("Output error: " + e);
 		}
 		System.err.println("Done handling connection.");
+
 		return;
 	}
 
@@ -89,12 +92,13 @@ public class WebWorker implements Runnable
 				System.err.println("Request line: (" + line + ")");
 				if(line.contains("GET")){
 					String[]request = line.split(" ");
-					requestString = request[1];
+					requestString = "./SimpleWebServer"+request[1];
 					System.out.println("requestString:"+requestString);
 				}
-				if (requestString.equals("/")||requestString.equals("/favicon.ico")){
+				if (requestString.equals("./SimpleWebServer/")||requestString.equals("./SimpleWebServer/favicon.ico")){
 					GETdefault = true; //load default page
 				}
+				else GETdefault = false;
 				if (line.length() == 0) {
 					break;
 				}
@@ -158,19 +162,21 @@ public class WebWorker implements Runnable
 
 			if(GETvalid&&!GETdefault){
 			try {
-				System.err.println("requestString: " + requestString);
-				System.err.println("file path it's looking for: "+ file.toString());
 				BufferedReader reader = new BufferedReader(new FileReader(file));
-				String line = "";
+				String line;
 				while((line=reader.readLine()) != null){
-
-					if(line.contains("<cs371date")){
+					String templine;
+					if(line.contains("<cs371date>")){
 						SimpleDateFormat format = new SimpleDateFormat("MM-dd-yyyy");
 						String dateString = format.format(new Date());
-						line.replaceAll("<cs371date", dateString);
+						System.out.println("dateString" + dateString);
+						templine = line.replaceAll("<cs371date>", dateString);
+						line = templine;
 					}
-					if(line.contains("<cs371server")){
-						line.replaceAll("<cs371server", "JESUSBARBA");
+					if(line.contains("<cs371server>")){
+						templine = line.replaceAll("<cs371server>", "JESUSBARBA");
+						line = templine;
+						System.out.println(line);
 					}
 
 					os.write(line.getBytes());
@@ -186,7 +192,7 @@ public class WebWorker implements Runnable
 
 		}
 
-		else {
+		if(GETdefault) {
 			String currentDir = System.getProperty("user.dir");
 			System.out.println("GETvalid: "+GETvalid);
 			System.out.println("currentDirectory: "+currentDir);
@@ -202,7 +208,7 @@ public class WebWorker implements Runnable
 		boolean check = false;
 		file = new File(requestString);
 		if (file.exists())
-			GETvalid = true;
+			check = true;
 		return check;
 	}
 } // end class
