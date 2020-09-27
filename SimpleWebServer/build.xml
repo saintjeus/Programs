@@ -12,7 +12,7 @@
     <target name="cleanbuild" depends="clean,build"/>
     <target name="freshrun" depends="clean,build,run"/>
         <target name="run" description="launches SimpleWebServer on port 8080">
-            <java classname="edu.nmsu.cs.webserver.WebServer" classpath="bin/" fork="true" dir="${basedir}" >
+            <java classname="edu.nmsu.cs.webserver.WebServer" classpath="${build}" fork="true" dir="${basedir}/www" >
                 <arg value="8080"/>
             </java>
         </target>
