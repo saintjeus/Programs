@@ -1,68 +1,66 @@
 package edu.nmsu.cs.circles;
-
-/***
- * Example JUnit testing class for Circle1 (and Circle)
- *
- * - must have your classpath set to include the JUnit jarfiles - to run the test do: java
- * org.junit.runner.JUnitCore Circle1Test - note that the commented out main is another way to run
- * tests - note that normally you would not have print statements in a JUnit testing class; they are
- * here just so you see what is happening. You should not have them in your test cases.
- ***/
-
 import org.junit.*;
 
 public class Circle1Test
 {
 	// Data you need for each test case
-	private Circle1 circle1;
-
-	//
-	// Stuff you want to do before each test case
-	//
+	private Circle1 circle;
 	@Before
 	public void setup()
 	{
-		System.out.println("\nTest starting...");
-		circle1 = new Circle1(1, 2, 3);
+		circle = new Circle1(1, 1, 1);
 	}
-
-	//
-	// Stuff you want to do after each test case
-	//
-	@After
-	public void teardown()
-	{
-		System.out.println("\nTest finished.");
+	/**!!!TEST CASES!!!**/
+	@Test(expected = IllegalArgumentException.class)
+	public void negativeRadius(){ //radius is scalar and cannot be <= 0
+	Circle1 test = new Circle1(1, 1, -2);
 	}
-
-	//
-	// Test a simple positive move
-	//
-	@Test
+	@Test(expected = IllegalArgumentException.class)
+	public void zeroRadius(){ //radius is scalar and cannot be <= 0
+		Circle1 test = new Circle1(1, 1, 0);
+	}
+	@Test //Test a scale by a positive factor
+	public void upScale(){
+		circle.scale(2);
+		Assert.assertTrue(circle.radius == 2);
+	}
+	@Test //Test a scale by a fractional factor
+	public void downScale(){
+		circle.scale(0.5);
+		Assert.assertTrue(circle.radius == 0.5);
+	}
+	@Test(expected = IllegalArgumentException.class)
+	public void negativeScale(){ //radius is scalar and cannot be <= 0
+		circle.scale(-1);
+	}
+	@Test(expected = IllegalArgumentException.class)
+	public void zeroScale(){ //radius is scalar and cannot be <= 0
+		circle.scale(0);
+	}
+	@Test // Test a simple positive move
 	public void simpleMove()
 	{
 		Point p;
-		System.out.println("Running test simpleMove.");
-		p = circle1.moveBy(1, 1);
+		p = circle.moveBy(1, 2);
 		Assert.assertTrue(p.x == 2 && p.y == 3);
 	}
-
-	//
-	// Test a simple negative move
-	//
-	@Test
+	@Test // Test a simple negative move
 	public void simpleMoveNeg()
 	{
 		Point p;
-		System.out.println("Running test simpleMoveNeg.");
-		p = circle1.moveBy(-1, -1);
-		Assert.assertTrue(p.x == 0 && p.y == 1);
+		p = circle.moveBy(-1, -2);
+		Assert.assertTrue(p.x == 0 && p.y == -1);
 	}
-
-	/***
-	 * NOT USED public static void main(String args[]) { try { org.junit.runner.JUnitCore.runClasses(
-	 * java.lang.Class.forName("Circle1Test")); } catch (Exception e) { System.out.println("Exception:
-	 * " + e); } }
-	 ***/
-
+	@Test //intersect test: these circles should intersect
+	public void intersectTest(){
+		Circle1 other = new Circle1(-20, -20, 100);
+		boolean test = circle.intersects(other);
+		Assert.assertTrue(test);
+	}
+	@Test //negative intersect test: these circles should not intersect
+	public void negIntersectTest(){
+		Circle1 other = new Circle1(50, 75, 1);
+		boolean test = circle.intersects(other);
+		Assert.assertFalse(test);
+	}
 }

@@ -25,7 +25,10 @@ public abstract class Circle
 		center = new Point();
 		center.x = x;
 		center.y = y;
+		if (radius > 0)
 		this.radius = radius;
+		else
+			throw new IllegalArgumentException("radius is a scalar value. enter a value greater than 0.");
 	}
 
 	/**
@@ -37,8 +40,12 @@ public abstract class Circle
 	 **/
 	public double scale(double factor)
 	{
-		radius = radius + factor;
+		if (factor > 0){
+		radius = radius * factor;
 		return radius;
+		}
+		else
+			throw new IllegalArgumentException("radius is a scalar value. enter a value greater than 0.");
 	}
 
 	/**
@@ -53,7 +60,7 @@ public abstract class Circle
 	public Point moveBy(double xOffset, double yOffset)
 	{
 		center.x = center.x + xOffset;
-		center.y = center.y + xOffset;
+		center.y = center.y + yOffset;
 		return center;
 	}
 
